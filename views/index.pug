@@ -1,0 +1,17 @@
+extends layout
+
+block content
+
+  div(class="container")
+    div(class="row")
+      h1(class="text-center col-md-12")=title
+    div(class="row mt-2")
+      input(id="HTTPLinkInput" class="col-md-12 mt-2 form-control" placeholder="https://www.youtube.com/*")
+    div(class="mt-2")
+      iframe(id="previewIframe" class="d-none col-xs-12 text-center")
+    div(class="row mt-2")
+      div(class="button-group btn-block")
+        button(class="btn btn-primary btn-block disabled" id="downloadButton") Downlaod
+    div(class="row mt-2")
+      div(class="progress" style="heigth:20px;")
+        div(id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100")

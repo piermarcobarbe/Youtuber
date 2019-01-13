@@ -1,0 +1,155 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('youtuber:server');
+var http = require('http');
+var YoutubeMp3Downloader = require("youtube-mp3-downloader");
+var urlParser = require("js-video-url-parser");
+var fs = require("fs");
+
+var YD = new YoutubeMp3Downloader({
+    "ffmpegPath": "/usr/local/bin/ffmpeg",        // Where is the FFmpeg binary located?
+    "outputPath": "./public/mp3",            // Where should the downloaded and encoded files be stored?
+    "youtubeVideoQuality": "highest",       // What video quality should be used?
+    "queueParallelism": 1,                  // How many parallel downloads/encodes should be started?
+    "progressTimeout": 50                 // How long should be the interval of the progress reports
+});
+
+// console.log(YD);
+
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+console.log("Running on port " + port);
+
+/**
+ * Create HTTP server.
+ */
+
+var server = http.createServer(app);
+var io = require('socket.io')(server);
+
+
+io.on('connection', function(socket){
+    console.log('a user connected');
+
+    socket.on('download', function (val) {
+
+        console.log(val);
+        YD.download(val);
+
+        YD.on("progress", function (progress) {
+            socket.emit("progress", progress);
+        });
+
+        YD.on("finished", function (err, data) {
+            console.log("Finished");
+            if(err) {
+                socket.emit("file", null);
+                throw err;
+            }
+            console.log(data.file);
+
+
+            let subArrays = data.file.split("./public/");
+
+            console.log(subArrays[1]);
+
+            socket.emit("file", subArrays[1]);
+
+
+        })
+    });
+
+    socket.on('checkURL', function(str){
+        console.log("socket.on checkURL");
+        let info = urlParser.parse(str);
+        if (info) if(info.id) socket.emit("correctURL", info.id);
+    });
+
+    socket.on('disconnect', function(){
+        console.log('user disconnected');
+    });
+
+});
+
+
+
+
+
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
