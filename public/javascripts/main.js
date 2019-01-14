@@ -30,6 +30,11 @@ window.onload = function () {
 
     });
 
+
+    setInterval(function () {
+        checkURL( $("#HTTPLinkInput").val());
+    }, 3000);
+
     $("#downloadButton").on('click', function(){
         // let videoId = checkURL($("#HTTPLinkInput").val());
         // if(videoId === null) return;
