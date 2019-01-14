@@ -10,16 +10,39 @@ var http = require('http');
 var YoutubeMp3Downloader = require("youtube-mp3-downloader");
 var urlParser = require("js-video-url-parser");
 var fs = require("fs");
+const { spawn } = require('child_process');
+const which_ffmpeg = spawn('which', ['ffmpeg']);
 
-var YD = new YoutubeMp3Downloader({
-    "ffmpegPath": "/usr/local/bin/ffmpeg",        // Where is the FFmpeg binary located?
-    "outputPath": "./public/mp3",            // Where should the downloaded and encoded files be stored?
-    "youtubeVideoQuality": "highest",       // What video quality should be used?
-    "queueParallelism": 1,                  // How many parallel downloads/encodes should be started?
-    "progressTimeout": 50                 // How long should be the interval of the progress reports
+var YD;
+
+
+which_ffmpeg.stderr.on('data', function (data) {
+    throw new Error("which ffmpeg failed.");
+})
+
+which_ffmpeg.stdout.on('data', function (data) {
+    console.log("which ffmpeg => "+data.toString());
+    let ffmpegPath = data.toString();
+
+    // ffmpeg is in format `/usr/bin/ffmpeg\n`
+
+    ffmpegPath = ffmpegPath.slice(0, ffmpegPath.length-1);
+
+    YD = new YoutubeMp3Downloader({
+        "ffmpegPath": ffmpegPath,        // Where is the FFmpeg binary located?
+        "outputPath": "./public/mp3",            // Where should the downloaded and encoded files be stored?
+        "youtubeVideoQuality": "highest",       // What video quality should be used?
+        "queueParallelism": 1,                  // How many parallel downloads/encodes should be started?
+        "progressTimeout": 50                 // How long should be the interval of the progress reports
+    });
+
+    console.log(YD);
+})
+
+which_ffmpeg.on('close', (code) => {
+    console.log(`which ffmpeg exited with code ${code}`);
 });
 
-// console.log(YD);
 
 
 /**
@@ -38,13 +61,19 @@ var server = http.createServer(app);
 var io = require('socket.io')(server);
 
 
+
+
 io.on('connection', function(socket){
+
     console.log('a user connected');
 
     socket.on('download', function (val) {
 
-        console.log(val);
-        YD.download(val);
+        console.log("download "+val);
+
+        YD.on("error", function(error) {
+            console.log(error);
+        });
 
         YD.on("progress", function (progress) {
             socket.emit("progress", progress);
@@ -67,6 +96,8 @@ io.on('connection', function(socket){
 
 
         })
+
+        YD.download(val);
     });
 
     socket.on('checkURL', function(str){
