@@ -69,6 +69,8 @@ io.on('connection', function(socket){
 
     socket.on('download', function (val) {
 
+        fs.mkdirSync("./public/mp3/", { recursive: true });
+
         console.log("download "+val);
 
         YD.on("error", function(error) {
