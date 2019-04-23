@@ -65,7 +65,9 @@ var io = require('socket.io')(server);
 
 io.on('connection', function(socket){
 
-    console.log('a user connected');
+    let clientIP = socket.conn.remoteAddress;
+    clientIP = clientIP.split(":")[3];
+    console.log("Client IP:" + clientIP);
 
     socket.on('download', function (val) {
 
