@@ -6,12 +6,6 @@ let progressBarWidth;
 let videoId;
 
 
-/*
-$("#previewIframe").load(function () {
-    console.log("load");
-});
-*/
-
 window.onload = function () {
 
     console.log(progressBar);
@@ -54,9 +48,7 @@ window.onresize = function(){
 
 
 checkURL = function (link) {
-
     socket.emit("checkURL", link);
-
 };
 
 setProgressBarWidth = function(value){
@@ -107,4 +99,4 @@ socket.on("file", function(data) {
 
 sendURL = function(value) {
     socket.emit('download', value)
-}
+};
