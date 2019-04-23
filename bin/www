@@ -25,15 +25,14 @@ which_ffmpeg.stdout.on('data', function (data) {
     let ffmpegPath = data.toString();
 
     // ffmpeg is in format `/usr/bin/ffmpeg\n`
-
     ffmpegPath = ffmpegPath.slice(0, ffmpegPath.length-1);
 
     YD = new YoutubeMp3Downloader({
-        "ffmpegPath": ffmpegPath,        // Where is the FFmpeg binary located?
-        "outputPath": "./public/mp3",            // Where should the downloaded and encoded files be stored?
+        "ffmpegPath": ffmpegPath,               // Where is the FFmpeg binary located?
+        "outputPath": "./public/mp3",           // Where should the downloaded and encoded files be stored?
         "youtubeVideoQuality": "highest",       // What video quality should be used?
-        "queueParallelism": 10,                  // How many parallel downloads/encodes should be started?
-        "progressTimeout": 50                 // How long should be the interval of the progress reports
+        "queueParallelism": 10,                 // How many parallel downloads/encodes should be started?
+        "progressTimeout": 50                   // How long should be the interval of the progress reports
     });
 
     // console.log(YD);
@@ -65,11 +64,12 @@ var io = require('socket.io')(server);
 
 io.on('connection', function(socket){
 
-    let clientIP = socket.conn.remoteAddress;
+    var clientIP = socket.conn.remoteAddress;
     clientIP = clientIP.split(":")[3];
-    console.log("Client IP:" + clientIP);
+    console.log("Connection from IP " + clientIP);
 
     socket.on('download', function (val) {
+
 
         fs.mkdirSync("./public/mp3/", { recursive: true });
 
@@ -86,7 +86,7 @@ io.on('connection', function(socket){
         YD.on("finished", function (err, data) {
             console.log("Finished");
             if(err) {
-                socket.emit("file", null);
+                socket.emit("mp3Link", null);
                 throw err;
             }
             console.log(data.file);
@@ -96,10 +96,10 @@ io.on('connection', function(socket){
 
             console.log(subArrays[1]);
 
-            socket.emit("file", subArrays[1]);
+            socket.emit("mp3Link", subArrays[1]);
 
 
-        })
+        });
 
         YD.download(val);
     });
@@ -110,9 +110,10 @@ io.on('connection', function(socket){
         if (info) if(info.id) socket.emit("correctURL", info.id);
     });
 
-    socket.on('disconnect', function(){
-        console.log('user disconnected');
+    socket.on('disconnect', function(socket){
+        console.log("Connection closed: "+ clientIP);
     });
+
 
 });
 

@@ -2,101 +2,149 @@ var socket = io();
 
 var progressBar = $("#progressBar");
 
-let progressBarWidth;
-let videoId;
-
-
 window.onload = function () {
 
-    console.log(progressBar);
+    clearPage();
 
     socket.on("correctURL", function (videoID) {
-        console.log(videoID);
-        videoId = videoID;
-        $("#downloadButton").removeClass("disabled");
-        setIframe(videoID);
+        setupPage(videoID);
     });
 
 
-    $("#HTTPLinkInput").on("keyup", function () {
-        // console.log("db")
-        checkURL($(this).val());
 
+    document.getElementById("downloadButton").onclick = function(){
+        console.log("Button onclick setup");
+
+        if($(this).hasClass("disabled")){
+            console.log("NOPE");
+            return;
+        }
+
+        let button = document.getElementById("downloadButton");
+        let videoID = button.getAttribute("data-download");
+
+        $("#downloadButton").addClass("disabled");
+        $("#downloadButton").text("Downloading...");
+        sendURL(videoID);
+    };
+
+
+    $("#HTTPLinkInput").on("keyup", function () {
+        checkURL($(this).val());
     });
 
     $("#HTTPLinkInput").on("change", function () {
         checkURL($(this).val());
     });
 
-
-
-    $("#downloadButton").on('click', function(){
-        // let videoId = checkURL($("#HTTPLinkInput").val());
-        // if(videoId === null) return;
-        if(videoId) {
-            $("#downloadButton").addClass("disabled");
-            $("#downloadButton").text("Downloading...");
-            sendURL(videoId);
-        }
-    })
-
 };
 
-window.onresize = function(){
-    setProgressBarWidth(progressBarWidth);
-};
+linkToVideoId = function(link){
+    console.log("linkToVideoId: " + link);
+//    https: / / www.youtube.com / watch?v=zQ8dDxnsGRI
+    let r = link.split('/')[3];
+    r = r.split("=")[1];
+    console.log("linkToVideoId: return " + r);
+    return r;
+}
+
+// window.onresize = function(){
+//     setProgressBarWidth(progressBarWidth);
+// };
 
 
 checkURL = function (link) {
-    socket.emit("checkURL", link);
+
+    console.log("checkURL " + link);
+
+    if(link === ""){
+        console.log("link is ''");
+        clearPage();
+        return;
+    }
+    setupPage(linkToVideoId(link));
 };
 
 setProgressBarWidth = function(value){
-    progressBarWidth = value;
 
-    let total = window.innerWidth;
+    $("#progressBar").show();
+    $("#progressBarContainer").show();
+    $("#progressBar").show();
+    let total = document.body.offsetWidth;
     let partial = total * value / 100;
     console.log(total, value, partial);
     $("#progressBar").width(partial);
+    $("#progressBar").text(value.toFixed(2) + "%");
+
+};
+
+progressBarReset = function(){
+    setProgressBarWidth(0);
+    $("#progressBarContainer").hide();
 };
 
 setIframe = function(videoID){
-
     let _iframe = document.getElementById("previewIframe");
-    let jiframe = $("#previewIframe");
-
-    if(videoID === null && videoID === videoId){
-        _iframe.setAttribute("src", "");
-
-        jiframe.removeClass("embed-responsive-item");
-        jiframe.parent().removeClass("embed-responsive");
-        jiframe.parent().removeClass("embed-responsive-16by9");
-        jiframe.addClass("d-none")
-    } else {
-        _iframe.setAttribute("src", "https://www.youtube.com/embed/"+ videoID);
-
-        jiframe.addClass("embed-responsive-item");
-        jiframe.parent().addClass("embed-responsive");
-        jiframe.parent().addClass("embed-responsive-16by9");
-        jiframe.removeClass("d-none")
-    }
-
+    _iframe.setAttribute("src", "https://www.youtube.com/embed/"+ videoID);
+    $("#iFrameContainer").show();
 
 };
+
+clearIframe = function(){
+    $("#iFrameContainer").hide();
+}
 
 socket.on("progress", function(progress) {
     setProgressBarWidth(progress.progress.percentage);
     // console.log(progress);
 });
 
-socket.on("file", function(data) {
-    console.log(data)
+createListItem = function(data){
+    console.log("createListItem: ", data);
+    let itemTitle = data.split("/")[1];
+    let value =  "<li class=\"list-group-item mt-3\"><a class=\"text-dark\" target=\"_blank\" href='" + data + "'>Download "+ itemTitle +"</a></li>";
+    $("#URLList").append(value);
+}
+
+socket.on("mp3Link", function(data) {
+    console.log(data);
+    if(data == null) return displayError("null came as response from Server.");
     $("#downloadButton").removeClass("disabled");
     $("#downloadButton").text("Download");
-    window.open(location.href + data);
-    setProgressBarWidth(0);
+    // window.open(location.href + data);
+    createListItem(data);
+    progressBarReset();
 });
 
 sendURL = function(value) {
     socket.emit('download', value)
+};
+
+
+displayError = function (str) {
+    // alert with str as error string.
+}
+
+setupDownloadButton = function(videoID){
+    let b = document.getElementById("downloadButton");
+    b.setAttribute("data-download", videoID);
+    b.classList.remove("disabled");
+};
+
+clearDownloadButton = function(){
+    let b = document.getElementById("downloadButton");
+    b.classList.add("disabled");
+
+}
+
+setupPage = function (videoID) {
+    setIframe(videoID);
+    setupDownloadButton(videoID);
+}
+
+clearPage = function(){
+    progressBarReset();
+    clearIframe();
+    clearDownloadButton();
+
 };
