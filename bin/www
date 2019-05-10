@@ -16,6 +16,10 @@ const which_ffmpeg = spawn('which', ['ffmpeg']);
 var YD;
 
 
+if(!(fs.existsSync("./public/mp3"))){
+    fs.mkdirSync("./public/mp3/", { recursive: true });
+}
+
 which_ffmpeg.stderr.on('data', function (data) {
     throw new Error("`which ffmpeg` failed. Probably ffmpeg is not installed.");
 })
@@ -71,7 +75,7 @@ io.on('connection', function(socket){
     socket.on('download', function (val) {
 
 
-        fs.mkdirSync("./public/mp3/", { recursive: true });
+
 
         console.log("download "+val);
 
