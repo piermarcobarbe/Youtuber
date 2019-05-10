@@ -12,12 +12,15 @@ var urlParser = require("js-video-url-parser");
 var fs = require("fs");
 const { spawn } = require('child_process');
 const which_ffmpeg = spawn('which', ['ffmpeg']);
+var find = require('find');
+
 
 var YD;
 
+const downloadDir = "./public/mp3";
 
-if(!(fs.existsSync("./public/mp3"))){
-    fs.mkdirSync("./public/mp3/", { recursive: true });
+if(!(fs.existsSync(downloadDir))){
+    fs.mkdirSync(downloadDir, { recursive: true });
 }
 
 which_ffmpeg.stderr.on('data', function (data) {
@@ -33,7 +36,7 @@ which_ffmpeg.stdout.on('data', function (data) {
 
     YD = new YoutubeMp3Downloader({
         "ffmpegPath": ffmpegPath,               // Where is the FFmpeg binary located?
-        "outputPath": "./public/mp3",           // Where should the downloaded and encoded files be stored?
+        "outputPath": downloadDir,           // Where should the downloaded and encoded files be stored?
         "youtubeVideoQuality": "highest",       // What video quality should be used?
         "queueParallelism": 10,                 // How many parallel downloads/encodes should be started?
         "progressTimeout": 50                   // How long should be the interval of the progress reports
@@ -72,12 +75,17 @@ io.on('connection', function(socket){
     clientIP = clientIP.split(":")[3];
     console.log("Connection from IP " + clientIP);
 
-    socket.on('download', function (val) {
+    socket.on('download', function (videoID) {
 
+        console.log("download " +videoID);
 
+        // var re  = '/*' + videoID + '\.mp3$/';
 
+        // console.log(re);
 
-        console.log("download "+val);
+        // find.file(re, downloadDir, function (files) {
+        //     console.log(files)
+        // })
 
         YD.on("error", function(error) {
             console.log(error);
@@ -93,19 +101,34 @@ io.on('connection', function(socket){
                 socket.emit("mp3Link", null);
                 throw err;
             }
-            console.log(data.file);
+            console.log("data", data);
 
+            let fileWithoutExt = data.file;
+            fileWithoutExt = fileWithoutExt.split('.mp3');
+            fileWithoutExt = fileWithoutExt[0];
 
-            let subArrays = data.file.split("./public/");
+            console.log("fwe:", fileWithoutExt);
+
+            let outFile = fileWithoutExt + "-" + data.videoId + ".mp3";
+            console.log("outFile:", outFile);
+
+            if(!(fs.existsSync(outFile))){
+                fs.renameSync(data.file, outFile);
+            }
+
+            let subArrays = outFile.split("./public/");
 
             console.log(subArrays[1]);
 
-            socket.emit("mp3Link", subArrays[1]);
+            socket.emit("mp3Link", {
+                file : subArrays[1],
+                name : data.videoTitle + ".mp3"
+            });
 
 
         });
 
-        YD.download(val);
+        YD.download(videoID);
     });
 
     socket.on('checkURL', function(str){

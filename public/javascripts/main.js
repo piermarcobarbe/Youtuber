@@ -100,9 +100,10 @@ socket.on("progress", function(progress) {
 });
 
 createListItem = function(data){
+    let title = data.name;
+    let file = data.file;
     console.log("createListItem: ", data);
-    let itemTitle = data.split("/")[1];
-    let value =  "<li class=\"list-group-item mt-3\"><a class=\"text-dark\" target=\"_blank\" href='" + data + "'>Download "+ itemTitle +"</a></li>";
+    let value =  "<li class=\"list-group-item mt-3\"><a class=\"text-dark\" target=\"_blank\" href='" + file + "'>Download "+ title +"</a></li>";
     $("#URLList").append(value);
 }
 
