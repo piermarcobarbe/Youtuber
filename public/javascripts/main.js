@@ -70,7 +70,7 @@ setProgressBarWidth = function(value){
     $("#progressBar").show();
     $("#progressBarContainer").show();
     $("#progressBar").show();
-    let total = document.body.offsetWidth;
+    let total = $("#progressBarContainer").width();
     let partial = total * value / 100;
     console.log(total, value, partial);
     $("#progressBar").width(partial);
