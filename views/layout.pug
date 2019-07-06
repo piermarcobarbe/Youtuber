@@ -1,7 +1,7 @@
 doctype html
-html
+html(style="height:100%")
     head
-        title= title
+        title=title
         link(rel='stylesheet', href='/stylesheets/style.css')
         link(rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" crossorigin="anonymous")
         script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" crossorigin="anonymous")
@@ -10,6 +10,6 @@ html
         script(src="/javascripts/main.js" crossorigin="anonymous")
         meta(name="viewport" content="width=device-width, initial-scale=1")
         link(rel="icon" type="image/png" href="/images/favicon.png")
-body
+body(class="bg-dark")
     block content
     div(class="container")

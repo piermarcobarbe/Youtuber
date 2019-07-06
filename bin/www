@@ -12,8 +12,6 @@ var urlParser = require("js-video-url-parser");
 var fs = require("fs");
 const { spawn } = require('child_process');
 const which_ffmpeg = spawn('which', ['ffmpeg']);
-var find = require('find');
-
 
 var YD;
 
@@ -28,7 +26,7 @@ which_ffmpeg.stderr.on('data', function (data) {
 })
 
 which_ffmpeg.stdout.on('data', function (data) {
-    console.log("which ffmpeg => "+data.toString());
+    // console.log("which ffmpeg => "+data.toString());
     let ffmpegPath = data.toString();
 
     // ffmpeg is in format `/usr/bin/ffmpeg\n`
